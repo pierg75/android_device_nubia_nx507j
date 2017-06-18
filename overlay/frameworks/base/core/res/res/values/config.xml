@@ -155,6 +155,7 @@
     <string translatable="false" name="config_radio_access_family">LTE|CDMA|EVDO|GSM|WCDMA|TD_SCDMA</string> -->
     <string translatable="false" name="config_radio_access_family">GPRS|EDGE|UMTS|IS95A|IS95B|1XRTT|EVDO_0|EVDO_A|HSDPA|HSUPA|HSPA|EVDO_B|EHRPD|LTE|HSPAP|GSM|TD_SCDMA|HS|CDMA|EVDO|WCDMA</string>
 
+
     <!-- If the DUN connection for this CDMA device supports more than just DUN -->
     <!-- traffic you should list them here. -->
     <!-- If this device is not CDMA this is ignored.  If this list is empty on -->
@@ -380,6 +381,6 @@
     <!-- Whether device supports double tap to wake -->
     <bool name="config_supportDoubleTapWake">true</bool>
 
-    <!-- Enable UI blur feature
-    <bool name="config_uiBlurEnabled">true</bool> -->
+    <!-- Enable UI blur feature -->
+    <bool name="config_uiBlurEnabled">true</bool> 
 </resources>
