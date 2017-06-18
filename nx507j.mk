@@ -186,13 +186,15 @@ PRODUCT_PACKAGES += \
 
 # Ramdisk
 PRODUCT_PACKAGES += \
+    init.rc \
     fstab.qcom \
     init.nubia.sh \
     init.nubia.usb.rc \
     init.qcom.rc \
     init.recovery.qcom.rc \
     init.qcom.usb.sh \
-    ueventd.qcom.rc 
+    ueventd.qcom.rc \
+    ueventd.rc
 
 # for nubia camera app
 PRODUCT_PACKAGES += \
@@ -203,7 +205,6 @@ PRODUCT_PACKAGES += \
 
 # Thermal config
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/etc/thermald-8974.conf:system/etc/thermald-8974.conf \
     $(LOCAL_PATH)/etc/thermal-engine-8974.conf:system/etc/thermal-engine-8974.conf \
     $(LOCAL_PATH)/etc/thermal-engine-8974pro.conf:system/etc/thermal-engine-8974pro.conf
 
