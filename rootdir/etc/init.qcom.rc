@@ -18,9 +18,10 @@ import /init.nubia.usb.rc
 import /init.recovery.qcom.rc
 
 on early-init
-    mount debugfs debugfs /sys/kernel/debug
-    chmod 0755 /sys/kernel/debug
+    mount debugfs /sys/kernel/debug /sys/kernel/debug mode=755
     chown system system /sys/kernel/debug/kgsl/proc
+    write /sys/block/zram0/comp_algorithm lz4
+
 
 on init
 
@@ -145,6 +146,19 @@ on boot
     write /proc/sys/net/ipv6/conf/rmnet5/accept_ra 2
     write /proc/sys/net/ipv6/conf/rmnet6/accept_ra 2
     write /proc/sys/net/ipv6/conf/rmnet7/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio0/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio1/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio2/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio3/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio4/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio5/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio6/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_sdio7/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_usb0/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_usb1/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_usb2/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_usb3/accept_ra 2
+
 
     # To prevent out of order acknowledgements from making
     # connection tracking to treat them as not belonging to
@@ -175,11 +189,15 @@ on boot
     write /sys/bus/msm_subsys/devices/subsys2/restart_level "related"
 
     # Adaptive LMK
-    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 0
+    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
     write /sys/module/lowmemorykiller/parameters/vmpressure_file_min 53059
 
 on post-fs-data
     mkdir /data/media 0770 media_rw media_rw
+
+    # NFC: create data/nfc for nv storage
+    mkdir /data/nfc 0770 nfc nfc
+    mkdir /data/nfc/param 0770 nfc nfc
 
     # Create directory for TZ Apps
     mkdir /data/misc/qsee 0770 system system
@@ -295,6 +313,7 @@ on post-fs-data
 	#hall_device
    	chown system system /sys/class/hall_device/hall_device/enable
    	chmod 0644 /sys/class/hall_device/hall_device/enable
+        write /sys/devices/virtual/hall_device/hall_device/enable 1
     
 	#proximity
 	mkdir /persist/proxdata 0775 system system
@@ -407,6 +426,11 @@ on post-fs-data
 	chown system system /sys/devices/gpio_keys.85/disabled_keys	
 	chmod 0666 /sys/devices/gpio_keys.85/disabled_keys	
 
+        chown system system /sys/bus/i2c/devices/2-0022/input/input0/0dbutton
+        chmod 0666 /sys/bus/i2c/devices/2-0022/input/input0/0dbutton
+        chown system system /sys/bus/ttsp4/drivers/cyttsp4_btn/cyttsp4_btn.main_ttsp_core/button
+        chmod 0666 /sys/bus/ttsp4/drivers/cyttsp4_btn/cyttsp4_btn.main_ttsp_core/button
+
 	#lcd enhance
 	chown system system /sys/kernel/lcd_enhance/disptype
 	chmod 0666 /sys/kernel/lcd_enhance/disptype
@@ -421,7 +445,7 @@ on post-fs-data
 	chmod 0664 /sys/class/timed_output/vibrator/vtg_level
 
 #ZTEMT enable detceting 9V charger 
-    setprop persist.usb.hvdcp.detect true
+    	setprop persist.usb.hvdcp.detect false
 
 # ADDED BY ZTEMT ZhuBing
 	chown root system /sys/class/leds/red/brightness
@@ -477,7 +501,7 @@ service netmgrd /system/bin/netmgrd
 
 # QCOM sensor
 service sensors /system/bin/sensors.qcom
-    class main
+    class late_start
     user root
     group root wakelock
 
@@ -526,11 +550,11 @@ service wpa_supplicant /system/bin/wpa_supplicant \
 
 service loc_launcher /system/bin/loc_launcher
     #loc_launcher will start as root and set its uid to gps
-    class main
+    class late_start
     group gps qcom_oncrpc inet net_raw diag qcom_diag net_admin wifi
 
 service fm_dl /system/bin/sh /system/etc/init.qcom.fm.sh
-    class main
+    class late_start
     user root
     group system fm_radio
     disabled
@@ -546,7 +570,19 @@ service charger /sbin/healthd -c
     critical
     seclabel u:r:healthd:s0
 
+service hvdcp /system/bin/hvdcp
+    class core
+    user root
+    disabled
+
+on property:persist.usb.hvdcp.detect=true
+    start hvdcp
+
+on property:persist.usb.hvdcp.detect=false
+    stop hvdcp
+
 service qbcharger /charger -m 1
+    disabled
     oneshot
     seclabel u:r:healthd:s0
 
@@ -557,7 +593,7 @@ on property:sys.qbcharger.enable=false
     stop qbcharger
 
 service qcamerasvr /system/bin/mm-qcamera-daemon
-    class main
+    class late_start
     user camera
     group camera system inet input graphics
 
@@ -565,8 +601,9 @@ service mpdecision /system/bin/mpdecision --avg_comp
    class main
    user root
    group root readproc
+   disabled
 
-service thermal-engine /system/vendor/bin/thermal-engine --config /system/etc/thermal-engine-8974.conf
+service thermal-engine /system/vendor/bin/thermal-engine --config /system/etc/thermal-engine-8974pro.conf
    class main
    user root
    group root
@@ -575,7 +612,7 @@ service thermal-engine /system/vendor/bin/thermal-engine --config /system/etc/th
    socket thermal-recv-passive-client stream 0666 system system
 
 service time_daemon /system/bin/time_daemon
-    class main
+    class late_start
     user root
     group root
 
@@ -597,18 +634,18 @@ service config_bluetooth /system/bin/sh /system/etc/init.qcom.bt.sh "onboot"
     oneshot
 
 service hciattach /system/bin/sh /system/etc/init.qcom.bt.sh
-    class main
+    class late_start
     user bluetooth
     group bluetooth net_bt_admin qcom_diag diag radio
     disabled
     oneshot
 
 service cnd /system/bin/cnd
-    class main
+    class late_start
     socket cnd stream 660 root inet
 
 service dpmd /system/bin/dpmd
-    class main
+    class late_start
     socket dpmd stream 660 root system
 
 on property:bluetooth.hciattach=true
@@ -623,7 +660,7 @@ service adsprpcd /system/bin/adsprpcd
    group media
 
 service audiod /system/bin/audiod
-   class main
+   class late_start
    user system
    group system
 
@@ -641,7 +678,7 @@ on property:init.svc.surfaceflinger=running
 
 # diag logging
 service diag_mdlog_start /system/bin/diag_mdlog
-    class main
+    class late_start
     user shell
     group system qcom_diag diag sdcard_rw sdcard_r media_rw
     disabled
@@ -651,6 +688,7 @@ service diag_mdlog_stop /system/bin/diag_mdlog -k
     class late_start
     user shell
     group system qcom_diag diag sdcard_rw sdcard_r media_rw
+    disabled
     oneshot
 
 service qlogd /system/xbin/qlogd
@@ -662,7 +700,8 @@ on property:persist.sys.qlogd=0
     stop qlogd
 
 service ssr_diag /system/bin/ssr_diag
-    class main
+    class late_start
+    disabled
     user system
     group system
 
