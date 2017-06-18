@@ -92,6 +92,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     libxml2 \
     camera.msm8974 \
+    libqomx_core \
     libshim_camera \
     Snap
 
