@@ -177,11 +177,22 @@
 /dev/wcnss_ctrl           0660   system     system
 #nfc permissions
 /dev/nfc-nci              0660    nfc         nfc
+/dev/assd                 0660    nfc         nfc
 
 # UIO devices
 /dev/uio0                 0660   system     system
 /dev/uio1                 0660   system     system
 /dev/uio2                 0660   system     system
+
+# Add device block for FRP
+/dev/block/bootdevice/by-name/config    0660   system     system
+
+#ZTEMT add by chengdongsheng for nfc-pn544
+/dev/pn544 0660 nfc nfc
+
+/dev/pn547 0660 nfc nfc
+
+/dev/bcm2079x 0660 nfc nfc
 
 # drv2605 LRA vibrator
 /dev/drv2605              0660   system     system
